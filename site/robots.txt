@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://achola-odhiambo-advocates.vercel.app/sitemap.xml
