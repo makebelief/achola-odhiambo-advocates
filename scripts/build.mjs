@@ -118,23 +118,6 @@ const headerAndRail = shell.match(/(<header class="site-header"[\s\S]*?<\/header
 const footerAndScript = shell.match(/(<footer class="site-footer"[\s\S]*?<\/body><\/html>)/)?.[0];
 if (!headerAndRail || !footerAndScript) throw new Error('Could not extract shared site chrome from site/insights.html');
 
-for (const article of articles) {
-  const canonical = `${siteUrl}/insights/${article.slug}`;
-  const imageUrl = `${siteUrl}${article.image}`;
-  const title = `${article.title} | Achola Odhiambo & Company Advocates`;
-  const articleJsonLd = JSON.stringify({
-    '@context': 'https://schema.org', '@type': 'Article', headline: article.title,
-    description: article.description, image: [imageUrl], datePublished: article.date,
-    author: { '@type': 'Person', name: article.author },
-    publisher: { '@type': 'Organization', name: 'Achola Odhiambo & Company Advocates', url: siteUrl },
-    mainEntityOfPage: canonical
-  }).replaceAll('<', '\\u003c');
-  const html = `<!doctype html><html lang="en-KE"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(article.description)}"><link rel="canonical" href="${canonical}"><meta name="theme-color" content="#0b0c0f"><meta property="og:type" content="article"><meta property="og:site_name" content="Achola Odhiambo & Company Advocates"><meta property="og:title" content="${escapeHtml(article.title)}"><meta property="og:description" content="${escapeHtml(article.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${imageUrl}"><meta property="og:image:alt" content="${escapeHtml(article.imageAlt)}"><meta property="article:published_time" content="${article.date}T00:00:00+03:00"><meta property="article:author" content="${escapeHtml(article.author)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(article.title)}"><meta name="twitter:description" content="${escapeHtml(article.description)}"><meta name="twitter:image" content="${imageUrl}"><link rel="icon" type="image/svg+xml" href="/images/favicon.svg"><link rel="stylesheet" href="/assets/css/site.css?v=5"><script type="application/ld+json">${articleJsonLd}</script></head><body><a class="skip-link" href="#main-content">Skip to content</a>${headerAndRail}<main id="main-content"><article class="article-page"><header class="article-hero"><div class="article-hero-copy"><a class="article-back" href="/insights">← All insights</a><p class="eyebrow">${escapeHtml(article.category)}</p><h1>${escapeHtml(article.title)}</h1><p class="article-deck">${escapeHtml(article.description)}</p><div class="article-byline"><span>By ${escapeHtml(article.author)}</span><time datetime="${article.date}">${formatDate(article.date)}</time><span>${readTime(article.body)} min read</span></div></div><figure><img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.imageAlt)}"></figure></header><div class="article-layout container"><div class="article-share" aria-label="Share this article"><span>Share</span><a href="https://wa.me/?text=${encodeURIComponent(`${article.title} ${canonical}`)}" target="_blank" rel="noopener" aria-label="Share on WhatsApp">WhatsApp</a><a href="mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(canonical)}" aria-label="Share by email">Email</a><button type="button" data-copy-link="${canonical}">Copy link</button><span class="copy-status" role="status" aria-live="polite"></span></div><div class="article-body">${markdownToHtml(article.body)}<aside class="article-disclaimer"><strong>Legal notice</strong><p>This article provides general information only. It is not legal advice and does not create an advocate-client relationship. Please seek advice on your specific circumstances.</p></aside></div></div></article><section class="article-cta"><div><p class="eyebrow light">Speak with counsel</p><h2>Need advice on your specific circumstances?</h2></div><a class="button button-gold" href="/contact">Discuss your matter <span aria-hidden="true">↗</span></a></section></main>${footerAndScript}`;
-  const articleDir = path.join(out, 'insights', article.slug);
-  fs.mkdirSync(articleDir, { recursive: true });
-  fs.writeFileSync(path.join(articleDir, 'index.html'), html);
-}
-
 const sitemapPath = path.join(out, 'sitemap.xml');
 let sitemap = fs.readFileSync(sitemapPath, 'utf8');
 const articleUrls = articles.map(article => `  <url><loc>${siteUrl}/insights/${article.slug}</loc><lastmod>${article.date}</lastmod><changefreq>yearly</changefreq><priority>0.7</priority></url>`).join('\n');

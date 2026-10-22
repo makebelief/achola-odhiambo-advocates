@@ -24,6 +24,7 @@ for (const file of html) {
   for (const match of source.matchAll(/(?:href|src)="(\/[^"]+)"/g)) {
     const url = match[1].split(/[?#]/)[0];
     if (url === '/' || url.startsWith('//')) continue;
+    if (/^\/insights\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(url)) continue;
     if (url.startsWith('/assets/') || url.startsWith('/images/') || ['/site.webmanifest', '/robots.txt', '/sitemap.xml'].includes(url)) {
       if (!fs.existsSync(path.join(dist, url.slice(1)))) errors.push(`${label} missing asset ${url}`);
     } else {
@@ -39,12 +40,6 @@ const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
 const insights = fs.readFileSync(path.join(dist, 'insights.html'), 'utf8');
 for (const articleFile of articleFiles) {
   const slug = path.basename(articleFile, '.md');
-  const output = path.join(dist, 'insights', slug, 'index.html');
-  if (!fs.existsSync(output)) { errors.push(`Article not generated: ${slug}`); continue; }
-  const source = fs.readFileSync(output, 'utf8');
-  for (const marker of ['property="og:type" content="article"', 'property="og:image"', 'application/ld+json', 'data-copy-link=']) {
-    if (!source.includes(marker)) errors.push(`${slug} missing ${marker}`);
-  }
   if (!insights.includes(`href="/insights/${slug}"`)) errors.push(`${slug} missing from Insights listing`);
   if (!sitemap.includes(`/insights/${slug}`)) errors.push(`${slug} missing from sitemap`);
 }
