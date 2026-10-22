@@ -1,9 +1,17 @@
-import sanitizeHtml from 'sanitize-html';
 const siteUrl = 'https://achola-odhiambo-advocates.vercel.app';
 const escape = (value = '') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const safeBody = value => sanitizeHtml(value, { allowedTags: ['p','br','h2','h3','strong','em','ul','ol','li','a','blockquote'], allowedAttributes: { a: ['href','target','rel'] }, allowedSchemes: ['http','https','mailto'], transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener' }) } });
+const safeBody = (value = '') => String(value).match(/<[^>]*>|[^<]+/g)?.map(token => {
+  if (!token.startsWith('<')) return token;
+  const closing = token.match(/^<\/(p|h2|h3|strong|em|ul|ol|li|blockquote|a)\s*>$/i);
+  if (closing) return `</${closing[1].toLowerCase()}>`;
+  const simple = token.match(/^<(p|h2|h3|strong|em|ul|ol|li|blockquote|br)\b[^>]*>$/i);
+  if (simple) return `<${simple[1].toLowerCase()}>`;
+  const link = token.match(/^<a\b[^>]*\bhref=(['"])([^'"]+)\1[^>]*>$/i);
+  if (link && /^(https?:\/\/[^\s"'&<>]+|mailto:[^\s"'&<>]+)$/i.test(link[2])) return `<a href="${escape(link[2])}" rel="noopener">`;
+  return '';
+}).join('') || '';
 const date = value => new Intl.DateTimeFormat('en-KE',{day:'numeric',month:'long',year:'numeric',timeZone:'Africa/Nairobi'}).format(new Date(value));
-const readTime = html => Math.max(1, Math.ceil(sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).split(/\s+/).length / 210));
+const readTime = html => Math.max(1, Math.ceil(String(html).replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length / 210));
 export function articlePage(article) {
   const canonical = `${siteUrl}/insights/${encodeURIComponent(article.slug)}`;
   const title = escape(article.title), description = escape(article.description), image = escape(article.cover_image_url), author = escape(article.author_name), category = escape(article.category);
