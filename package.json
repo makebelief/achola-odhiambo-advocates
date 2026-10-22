@@ -8,6 +8,7 @@
     "deploy:cloudflare": "npm run build && wrangler pages deploy dist --project-name achola-odhiambo-advocates --branch main",
     "test": "node scripts/test.mjs",
     "test:production": "node tests/production-e2e.mjs",
+    "test:contact-rail": "node tests/contact-rail.mjs",
     "cleanup:article-images": "node tests/cleanup-orphan-images.mjs",
     "test:mobile": "node tests/mobile-smoke.mjs"
   },

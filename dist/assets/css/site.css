@@ -34,7 +34,6 @@
 .profile-heading{font-size:clamp(3.1rem,5.4vw,5.8rem)!important;line-height:.94!important}
 .muted-on-dark{color:rgba(255,255,255,.67)!important}
 .contact-main-heading{font-size:clamp(2.5rem,4vw,4.6rem)!important}
-.contact-rail.is-collapsed .contact-rail-actions{display:none}
 :where(a,button,input,textarea,select):focus-visible{outline:3px solid #b88437;outline-offset:3px}
 .consent-field{display:flex!important;align-items:flex-start;gap:12px;text-transform:none!important;letter-spacing:normal!important;font-size:.86rem!important;line-height:1.5;font-weight:500!important}
 .consent-field input{flex:0 0 20px;width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink)}
