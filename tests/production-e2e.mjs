@@ -47,6 +47,12 @@ try {
   const config = await configResponse.json();
   assert.match(config.supabaseUrl, /^https:\/\/.+\.supabase\.co$/);
   assert.ok(config.supabasePublishableKey);
+  await page.goto(`${base}/insights`, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-insights-list] img')].every(image => image.complete));
+  const brokenPublicImages = await page.locator('[data-insights-list] img').evaluateAll(images => images
+    .filter(image => image.naturalWidth === 0)
+    .map(image => image.currentSrc || image.src));
+  assert.deepEqual(brokenPublicImages, [], 'all public article cover images must load');
   adminClient = createClient(config.supabaseUrl, config.supabasePublishableKey, { auth: { persistSession: false } });
   const { error: adminLoginError } = await adminClient.auth.signInWithPassword({ email, password });
   assert.equal(adminLoginError, null, 'test cleanup authentication');
@@ -148,7 +154,7 @@ try {
   assert.equal(finalImages?.length || 0, initialImageCount, 'test images and failed duplicate uploads are cleaned up');
   await page.locator('[data-sign-out]').click();
   await page.waitForSelector('[data-login-view]:not([hidden])');
-  console.log(JSON.stringify({ ok: true, slug, checks: 33 }));
+  console.log(JSON.stringify({ ok: true, slug, checks: 34 }));
 } finally {
   if (created) await removeArticle(slug);
   await browser.close();
