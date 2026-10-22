@@ -144,6 +144,5 @@ try {
   console.log(JSON.stringify({ ok: true, slug, checks: 30 }));
 } finally {
   if (created) await removeArticle(slug);
-  await adminClient?.auth.signOut();
   await browser.close();
 }
