@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dist = path.resolve('dist');
-const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', 'admin/index.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'site.webmanifest', 'assets/css/site.css', 'assets/css/admin.css', 'assets/js/site.js', 'assets/js/admin.js', 'assets/js/insights.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
+const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', 'admin/index.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'site.webmanifest', '_headers', 'images/social-card-v2.jpg', 'assets/css/site.css', 'assets/css/admin.css', 'assets/js/site.js', 'assets/js/admin.js', 'assets/js/insights.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
 const errors = [];
 
 for (const file of required) if (!fs.existsSync(path.join(dist, file))) errors.push(`Missing generated file: ${file}`);
@@ -20,6 +20,7 @@ walk(dist);
 for (const file of html) {
   const source = fs.readFileSync(file, 'utf8');
   const label = path.relative(dist, file);
+  if (/^(<<<<<<<|=======|>>>>>>>)/m.test(source)) errors.push(`${label} contains merge-conflict markers`);
   if (!source.includes('viewport-fit=cover')) errors.push(`${label} missing responsive viewport`);
   for (const match of source.matchAll(/(?:href|src)="(\/[^"]+)"/g)) {
     const url = match[1].split(/[?#]/)[0];

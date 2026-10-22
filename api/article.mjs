@@ -1,4 +1,5 @@
 import { articlePage } from './_article-page.mjs';
+import crypto from 'node:crypto';
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
   const slug = String(request.query.slug || '');
@@ -10,7 +11,11 @@ export default async function handler(request, response) {
     const result = await fetch(query, { headers: { apikey: key, Accept: 'application/json' } });
     if (!result.ok) throw new Error(); const [article] = await result.json();
     if (!article) return response.status(404).send('Article not found');
+    const page = articlePage(article);
+    const jsonLd = page.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1] || '';
+    const hash = crypto.createHash('sha256').update(jsonLd).digest('base64');
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return response.status(200).send(articlePage(article));
+    response.setHeader('Content-Security-Policy', `default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'sha256-${hash}'; style-src 'self'; img-src 'self' data: https://ihctupovvhwdmdaawesj.supabase.co; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; upgrade-insecure-requests`);
+    return response.status(200).send(page);
   } catch { return response.status(502).send('Article temporarily unavailable'); }
 }

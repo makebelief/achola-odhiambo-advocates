@@ -1,10 +1,11 @@
 {
   "name": "achola-odhiambo-advocates",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "private": true,
   "scripts": {
     "check": "node scripts/build.mjs && node scripts/check.mjs && node --check api/article.mjs && node --check api/articles.mjs && node --check api/config.mjs && node --check api/sitemap.mjs",
     "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs",
     "test:production": "node tests/production-e2e.mjs",
     "cleanup:article-images": "node tests/cleanup-orphan-images.mjs",
     "test:mobile": "node tests/mobile-smoke.mjs"

@@ -1,11 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { build as bundle } from 'esbuild';
 
 const src = path.resolve('site');
 const out = path.resolve('dist');
 const articlesDir = path.resolve('content/articles');
-const siteUrl = (process.env.SITE_URL || 'https://achola-odhiambo-advocates.vercel.app').replace(/\/$/, '');
+const sourceSite = 'https://achola-odhiambo-advocates.vercel.app';
+function canonicalOrigin(value) {
+  if (!value) return sourceSite;
+  let url;
+  try { url = new URL(value); } catch { throw Error('SITE_URL must be an absolute https:// URL'); }
+  if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.search || url.hash || url.port || (url.pathname !== '/' && url.pathname !== '')) {
+    throw Error('SITE_URL must be an HTTPS origin without a path, query or fragment');
+  }
+  return url.origin;
+}
+const siteUrl = canonicalOrigin(process.env.SITE_URL?.trim());
 
 const escapeHtml = (value = '') => String(value)
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -130,4 +141,23 @@ await Promise.all([
   bundle({ entryPoints: ['src/insights.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/insights.js') })
 ]);
 
-console.log(`Built dist/ with ${articles.length} article${articles.length === 1 ? '' : 's'}.`);
+const builtPages = fs.readdirSync(out).filter(name => name.endsWith('.html')).map(name => path.join(out, name));
+builtPages.push(path.join(out, 'admin/index.html'));
+for (const filename of [...builtPages, path.join(out, 'robots.txt')]) {
+  const contents = fs.readFileSync(filename, 'utf8');
+  fs.writeFileSync(filename, contents.replaceAll(sourceSite, siteUrl));
+}
+
+const hashes = new Set();
+for (const filename of builtPages) {
+  const page = fs.readFileSync(filename, 'utf8');
+  for (const match of page.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) {
+    if (match[0].includes(' src=')) continue;
+    if (!/^<script\s+type="application\/ld\+json">/.test(match[0])) throw Error(`Unexpected inline script in ${filename}`);
+    hashes.add(`'sha256-${crypto.createHash('sha256').update(match[1]).digest('base64')}'`);
+  }
+}
+const headerTemplate = fs.readFileSync(path.join(src, '_headers'), 'utf8');
+fs.writeFileSync(path.join(out, '_headers'), headerTemplate.replace('__JSON_LD_SCRIPT_HASHES__', [...hashes].sort().join(' ')));
+
+console.log(`Built dist/ with ${articles.length} article${articles.length === 1 ? '' : 's'} and ${hashes.size} CSP hash(es).`);

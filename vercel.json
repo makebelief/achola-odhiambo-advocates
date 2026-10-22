@@ -25,7 +25,23 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'sha256-+oMYukCjFLM4UvronJnhAjExxezMtNq7H/KNKTurHe4=' 'sha256-5Y38h20n+HPQmRtPpeHVWzvN2y/8eMw3MAGOae9f9bQ=' 'sha256-FfxE5WsDXvcM19Gwqk//sU8HaJXqRqJRZHR6krNhv8I=' 'sha256-e0FXbhfJOis5fRuFIyuw1qAaqy1eekSVbBmvBp1SxoA=' 'sha256-lmtXS0dfsTtexkQATce3Ar9UV+1dPXQI1w9XFhFzVoE=' 'sha256-ok77Tw9/tG+VObzzQhGEqQfd659FkPI6Zzga22Ay04U=' 'sha256-v9buazckxPelQUOFGZAnxRuhG6PANfP4sQ2dG7pPnMA=' 'sha256-wW6MLVpPjiN5qQdxDuEc65JQNyNxqaEH2F5GxyJb7HQ=' 'sha256-zcHtB8tpo580mnFYgOicG8Vmukhk0TasM4W9eM6tYWQ='; style-src 'self'; img-src 'self' data: https://images.unsplash.com https://images.pexels.com https://ihctupovvhwdmdaawesj.supabase.co; font-src 'self'; connect-src 'self' https://ihctupovvhwdmdaawesj.supabase.co wss://ihctupovvhwdmdaawesj.supabase.co; media-src 'self'; manifest-src 'self'; upgrade-insecure-requests"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
         }
       ]
     },
@@ -35,6 +51,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, must-revalidate"
         }
       ]
     }
