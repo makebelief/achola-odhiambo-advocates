@@ -17,7 +17,7 @@ Edit **`site/`** for page content, photos and styles. `dist/` is generated deplo
 
 ## Cloudflare Pages production deployment
 
-The full site is deployed to `https://achola-odhiambo-advocates.pages.dev`. The `functions/` directory contains the Cloudflare equivalents of the article listing, configuration, dynamic article-page and sitemap routes. The previous Vercel implementation remains in `api/` only as a temporary rollback path.
+The full site is deployed to `https://achola-odhiambo-advocates.pages.dev`. The `functions/` directory contains the Cloudflare equivalents of the article listing, configuration, dynamic article-page and sitemap routes. The old Vercel hostname permanently redirects to Cloudflare; the previous implementation remains in `api/` as a source-level rollback path.
 
 1. Authenticate Wrangler with the intended Cloudflare account and install dependencies with `npm install`.
 2. Configure the Pages project's production secrets `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SITE_URL`. `SITE_URL` must be the exact HTTPS canonical origin, with no path, query or fragment.
