@@ -104,13 +104,16 @@ async function uploadCover() {
   const path = `${session.user.id}/${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from('article-images').upload(path, file, { cacheControl: '31536000', upsert: false, contentType: file.type });
   if (error) throw error;
-  return supabase.storage.from('article-images').getPublicUrl(path).data.publicUrl;
+  const publicUrl = supabase.storage.from('article-images').getPublicUrl(path).data.publicUrl;
+  articleForm.elements.cover_image_url.value = publicUrl;
+  articleForm.elements.cover_image.value = '';
+  return publicUrl;
 }
 
 async function saveArticle(status) {
   if (!articleForm.reportValidity()) return;
   const bodyHtml = DOMPurify.sanitize(bodyEditor.innerHTML, { ALLOWED_TAGS: ['p','br','h2','h3','strong','em','ul','ol','li','a','blockquote'], ALLOWED_ATTR: ['href','target','rel'] });
-  if (!bodyEditor.textContent.trim()) return showMessage(saveMessage, 'Please write the article content.', true);
+  if (bodyEditor.textContent.trim().length < 3) return showMessage(saveMessage, 'Please write some article content before saving.', true);
   setBusy(true); showMessage(saveMessage, status === 'published' ? 'Publishing…' : 'Saving draft…');
   try {
     const coverImageUrl = await uploadCover(); if (!coverImageUrl) throw new Error('Please upload a cover image.');
@@ -119,7 +122,10 @@ async function saveArticle(status) {
     const query = id ? supabase.from('articles').update(article).eq('id', id) : supabase.from('articles').insert(article);
     const { data, error } = await query.select().single(); if (error) throw error;
     articleForm.elements.id.value = data.id; showMessage(saveMessage, status === 'published' ? 'Article published successfully.' : 'Draft saved.'); await loadArticles(data.id); editArticle(data.id);
-  } catch (error) { showMessage(saveMessage, error.code === '23505' ? 'That article address is already in use. Choose a different one.' : error.message, true); }
+  } catch (error) {
+    const message = error.code === '23505' ? 'That article address is already in use. Choose a different one.' : error.code === '23514' ? 'Please check that every field contains enough information.' : error.message;
+    showMessage(saveMessage, message, true);
+  }
   finally { setBusy(false); }
 }
 
