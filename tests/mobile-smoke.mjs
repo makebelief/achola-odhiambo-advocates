@@ -10,7 +10,7 @@ const email = process.env.TEST_ADMIN_EMAIL;
 const password = process.env.TEST_ADMIN_PASSWORD;
 if (!email || !password) throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required.');
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true });
-const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, bypassCSP: true });
 const errors = [];
 const accessibilityFailures = [];
 page.on('pageerror', error => errors.push(error.message));
