@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { build as bundle } from 'esbuild';
 
 const src = path.resolve('site');
 const out = path.resolve('dist');
@@ -107,8 +108,9 @@ const cards = articles.map(article => `<article class="insight-card reveal"><a c
 
 insights = insights.replace(
   /<section class="section"><div class="container insight-list">[\s\S]*?<\/div><\/section>/,
-  `<section class="section"><div class="container"><div class="insights-heading"><p class="eyebrow">Latest articles</p><p>${articles.length} article${articles.length === 1 ? '' : 's'} from our legal team.</p></div><div class="insight-list">${cards}</div></div></section>`
+  `<section class="section"><div class="container"><div class="insights-heading"><p class="eyebrow">Latest articles</p><p data-insights-count>${articles.length} article${articles.length === 1 ? '' : 's'} from our legal team.</p></div><div class="insight-list" data-insights-list>${cards}</div></div></section>`
 );
+insights = insights.replace('</body>', '<script type="module" src="/assets/js/insights.js?v=1"></script></body>');
 fs.writeFileSync(insightsPath, insights);
 
 const shell = fs.readFileSync(path.join(src, 'insights.html'), 'utf8');
@@ -138,5 +140,10 @@ let sitemap = fs.readFileSync(sitemapPath, 'utf8');
 const articleUrls = articles.map(article => `  <url><loc>${siteUrl}/insights/${article.slug}</loc><lastmod>${article.date}</lastmod><changefreq>yearly</changefreq><priority>0.7</priority></url>`).join('\n');
 sitemap = sitemap.replace('</urlset>', `${articleUrls}\n</urlset>`);
 fs.writeFileSync(sitemapPath, sitemap);
+
+await Promise.all([
+  bundle({ entryPoints: ['src/admin.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/admin.js') }),
+  bundle({ entryPoints: ['src/insights.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/insights.js') })
+]);
 
 console.log(`Built dist/ with ${articles.length} article${articles.length === 1 ? '' : 's'}.`);

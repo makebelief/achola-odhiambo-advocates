@@ -3,7 +3,15 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "check": "node scripts/build.mjs && node scripts/check.mjs",
+    "check": "node scripts/build.mjs && node scripts/check.mjs && node --check api/article.mjs && node --check api/articles.mjs && node --check api/config.mjs",
     "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
+    "dompurify": "3.4.17",
+    "sanitize-html": "2.18.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

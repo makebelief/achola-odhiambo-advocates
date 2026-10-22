@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dist = path.resolve('dist');
-const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'sitemap.xml', 'site.webmanifest', 'assets/css/site.css', 'assets/js/site.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
+const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', 'admin/index.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'sitemap.xml', 'site.webmanifest', 'assets/css/site.css', 'assets/css/admin.css', 'assets/js/site.js', 'assets/js/admin.js', 'assets/js/insights.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
 const errors = [];
 
 for (const file of required) if (!fs.existsSync(path.join(dist, file))) errors.push(`Missing generated file: ${file}`);
@@ -48,6 +48,12 @@ for (const articleFile of articleFiles) {
   if (!insights.includes(`href="/insights/${slug}"`)) errors.push(`${slug} missing from Insights listing`);
   if (!sitemap.includes(`/insights/${slug}`)) errors.push(`${slug} missing from sitemap`);
 }
+
+const admin = fs.readFileSync(path.join(dist, 'admin/index.html'), 'utf8');
+for (const marker of ['data-login-form', 'data-article-form', 'data-publish', '/assets/js/admin.js']) {
+  if (!admin.includes(marker)) errors.push(`Admin dashboard missing ${marker}`);
+}
+if (!insights.includes('data-insights-list') || !insights.includes('/assets/js/insights.js')) errors.push('Insights page missing dynamic article integration');
 
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 console.log(`Checks passed: ${html.length} generated HTML pages, ${articleFiles.length} article, required assets, metadata and internal links valid.`);

@@ -3,6 +3,9 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/insights/:slug", "destination": "/api/article?slug=:slug" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

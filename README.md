@@ -1,6 +1,6 @@
 # Achola Odhiambo & Company Advocates
 
-Production-ready static website for Achola Odhiambo & Company Advocates. The Insights section is a zero-cost static publishing system: Markdown articles are turned into an article index, individual shareable pages, social preview metadata and sitemap entries at build time. It requires no database, paid CMS or server-side runtime.
+Production-ready website for Achola Odhiambo & Company Advocates. The Insights section includes a private, non-technical article dashboard backed by Supabase Auth, Postgres and Storage. Published articles appear immediately with individual URLs and social preview metadata.
 
 ## Commands
 
@@ -10,30 +10,29 @@ npm run build
 vercel --prod --yes
 ```
 
-## Publish an article
+## Advocate publishing workflow
 
-The simplest client workflow is through GitHub's website, so nothing needs to be installed:
+The advocate does not need GitHub access. He visits `/admin`, signs in with his publishing email and password, and can:
 
-1. Prepare a landscape JPG or PNG image, ideally `1200 × 630` pixels and below 1 MB.
-2. In GitHub, open `site/assets/media`, choose **Add file → Upload files**, upload the image and commit it.
-3. Open `content/ARTICLE_TEMPLATE.md`, copy its contents, then create a new file in `content/articles`.
-4. Name the file with lowercase words and hyphens, for example `employment-records-to-preserve.md`. This filename becomes the permanent article URL.
-5. Complete every field between the `---` lines, write the article below them, and commit to the production branch.
-6. Vercel's Git integration rebuilds the website. The article will appear under `/insights` and its direct link will be `/insights/employment-records-to-preserve`.
+- create an article or save a private draft;
+- format headings, bold text, lists and links;
+- upload a cover image;
+- publish, edit or delete articles; and
+- open the public Insights page from the dashboard.
 
-Do not rename an article file after sharing its URL; that would change the link. To replace its preview image, keep the same image filename or update the article's `image` field and rebuild. WhatsApp may cache an older preview temporarily even after a deployment.
+Published content appears without a Git commit or Vercel rebuild. The server-rendered article route provides WhatsApp, search engine and social metadata.
 
-### Article fields
+## Developer setup
 
-- `title`: headline shown on the page and in link previews.
-- `description`: concise summary used by search engines and WhatsApp.
-- `date`: publication date in `YYYY-MM-DD` format.
-- `category`: practice area shown above the headline.
-- `author`: article byline.
-- `image`: a local image path beginning with `/assets/media/`.
-- `imageAlt`: describes the image for people using assistive technology.
+1. Create a Supabase project and apply `supabase/migrations/20261022074437_create_article_publishing.sql`.
+2. Create the advocate in Supabase Authentication using email/password.
+3. Add the new user's UUID to `public.admin_users`.
+4. Add `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` to Vercel for Production, Preview and Development.
+5. Deploy. The dashboard is available at `/admin`.
 
-Run `npm run check` before publishing when editing locally. The check builds the site and rejects missing metadata, invalid dates, missing images and broken links.
+Only the publishable key is returned to the browser. Database and Storage writes are protected by Row Level Security and an explicit `admin_users` allowlist. Never expose a Supabase secret or service-role key.
+
+The Markdown content under `content/articles` remains a static fallback for environments where the publishing service is unavailable.
 
 ## Visual asset notes (v4)
 - Homepage hero uses a real, non-AI stock photograph fetched from Unsplash: Vitaly Gariev, photo `omGSZqBXkqY`, under the Unsplash License.

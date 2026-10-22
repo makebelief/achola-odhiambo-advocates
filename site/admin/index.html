@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-KE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Article Manager | Achola Odhiambo &amp; Company Advocates</title>
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=1">
+</head>
+<body>
+  <header class="admin-header"><a href="/" aria-label="Website home"><img src="/assets/media/logo-dark.svg" alt="Achola Odhiambo & Company Advocates"></a><span>Article Manager</span></header>
+  <main>
+    <section class="login-card" data-login-view>
+      <p class="kicker">Secure publishing</p><h1>Welcome back</h1><p>Sign in to write and manage website articles.</p>
+      <form data-login-form><label>Email address<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">Sign in</button><p class="form-message" data-login-message role="status"></p></form>
+    </section>
+    <section class="dashboard" data-dashboard hidden>
+      <div class="dashboard-top"><div><p class="kicker">Insights</p><h1>Articles</h1></div><div class="dashboard-actions"><button type="button" class="secondary" data-view-site>View website</button><button type="button" class="secondary" data-sign-out>Sign out</button><button type="button" data-new-article>New article</button></div></div>
+      <div class="dashboard-grid">
+        <aside class="article-sidebar"><div class="sidebar-heading"><h2>Your articles</h2><span data-article-count></span></div><div class="article-list" data-article-list><p>Loading articles…</p></div></aside>
+        <section class="editor-panel" data-editor-panel>
+          <div class="empty-editor" data-empty-editor><span>✦</span><h2>Select an article or create a new one</h2><p>Drafts remain private until you choose Publish.</p></div>
+          <form data-article-form hidden>
+            <input name="id" type="hidden">
+            <div class="editor-heading"><div><p class="kicker" data-editor-mode>New article</p><h2 data-editor-title>Untitled article</h2></div><button type="button" class="danger-text" data-delete hidden>Delete article</button></div>
+            <div class="field-grid"><label>Article title<input name="title" maxlength="140" required></label><label>Category<input name="category" maxlength="60" placeholder="e.g. Employment law" required></label></div>
+            <label>Short summary<textarea name="description" rows="3" maxlength="220" required></textarea><small>Shown on the Insights page and in WhatsApp previews.</small></label>
+            <div class="field-grid"><label>Author<input name="author_name" maxlength="100" value="Achola Odhiambo" required></label><label>Publication date<input name="published_date" type="date" required></label></div>
+            <label>Article address<input name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required><small>Lowercase words separated by hyphens. Do not change this after sharing the article.</small></label>
+            <div class="cover-field"><div><label for="cover-image">Cover image</label><small>Landscape JPG, PNG or WebP; maximum 5 MB.</small><input id="cover-image" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp"></div><img data-cover-preview alt="Cover image preview" hidden><input name="cover_image_url" type="hidden"></div>
+            <label>Article content</label>
+            <div class="editor-toolbar" role="toolbar" aria-label="Text formatting"><button type="button" data-command="bold"><strong>B</strong></button><button type="button" data-command="italic"><em>I</em></button><button type="button" data-block="h2">Heading</button><button type="button" data-command="insertUnorderedList">Bullets</button><button type="button" data-command="insertOrderedList">Numbers</button><button type="button" data-link>Link</button><button type="button" data-command="removeFormat">Clear style</button></div>
+            <div class="rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-body-editor data-placeholder="Start writing the article here…"></div>
+            <p class="form-message" data-save-message role="status"></p>
+            <div class="save-actions"><button type="button" class="secondary" data-save-draft>Save draft</button><button type="button" data-publish>Publish article</button></div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/assets/js/admin.js?v=1"></script>
+</body>
+</html>
