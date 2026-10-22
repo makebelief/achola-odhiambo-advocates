@@ -1,4 +1,4 @@
-const siteUrl = 'https://achola-odhiambo-advocates.vercel.app';
+const defaultSiteUrl = 'https://achola-odhiambo-advocates.pages.dev';
 const escape = (value = '') => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const safeBody = (value = '') => String(value).match(/<[^>]*>|[^<]+/g)?.map(token => {
   if (!token.startsWith('<')) return token;
@@ -12,7 +12,7 @@ const safeBody = (value = '') => String(value).match(/<[^>]*>|[^<]+/g)?.map(toke
 }).join('') || '';
 const date = value => new Intl.DateTimeFormat('en-KE',{day:'numeric',month:'long',year:'numeric',timeZone:'Africa/Nairobi'}).format(new Date(value));
 const readTime = html => Math.max(1, Math.ceil(String(html).replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length / 210));
-export function articlePage(article) {
+export function articlePage(article, siteUrl = defaultSiteUrl) {
   const canonical = `${siteUrl}/insights/${encodeURIComponent(article.slug)}`;
   const title = escape(article.title), description = escape(article.description), image = escape(article.cover_image_url), author = escape(article.author_name), category = escape(article.category);
   const jsonLd = JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:article.title,description:article.description,image:[article.cover_image_url],datePublished:article.published_at,author:{'@type':'Person',name:article.author_name},publisher:{'@type':'Organization',name:'Achola Odhiambo & Company Advocates',url:siteUrl},mainEntityOfPage:canonical}).replaceAll('<','\\u003c');

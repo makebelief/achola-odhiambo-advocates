@@ -1,4 +1,4 @@
-const siteUrl = 'https://achola-odhiambo-advocates.vercel.app';
+const siteUrl = 'https://achola-odhiambo-advocates.pages.dev';
 const escapeXml = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 const staticPages = [
   ['/', 'weekly', '1.0'], ['/about', 'monthly', '0.8'], ['/practice-areas', 'monthly', '0.8'],

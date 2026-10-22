@@ -7,8 +7,9 @@ const src = path.resolve('site');
 const out = path.resolve('dist');
 const articlesDir = path.resolve('content/articles');
 const sourceSite = 'https://achola-odhiambo-advocates.vercel.app';
+const defaultSite = 'https://achola-odhiambo-advocates.pages.dev';
 function canonicalOrigin(value) {
-  if (!value) return sourceSite;
+  if (!value) return defaultSite;
   let url;
   try { url = new URL(value); } catch { throw Error('SITE_URL must be an absolute https:// URL'); }
   if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.search || url.hash || url.port || (url.pathname !== '/' && url.pathname !== '')) {
@@ -140,6 +141,11 @@ await Promise.all([
   bundle({ entryPoints: ['src/admin.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/admin.js') }),
   bundle({ entryPoints: ['src/insights.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/insights.js') })
 ]);
+for (const bundleFile of ['admin.js', 'insights.js']) {
+  const filename = path.join(out, 'assets/js', bundleFile);
+  const source = fs.readFileSync(filename, 'utf8').replace(/[ \t]+$/gm, '').trimEnd();
+  fs.writeFileSync(filename, `${source}\n`);
+}
 
 const builtPages = fs.readdirSync(out).filter(name => name.endsWith('.html')).map(name => path.join(out, name));
 builtPages.push(path.join(out, 'admin/index.html'));

@@ -2,16 +2,18 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 import { createClient } from '@supabase/supabase-js';
 
-const base = (process.env.TEST_BASE_URL || 'https://achola-odhiambo-advocates.vercel.app').replace(/\/$/, '');
+const base = (process.env.TEST_BASE_URL || 'https://achola-odhiambo-advocates.pages.dev').replace(/\/$/, '');
 const email = process.env.TEST_ADMIN_EMAIL;
 const password = process.env.TEST_ADMIN_PASSWORD;
 if (!email || !password) throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required.');
 const slug = `production-check-${Date.now()}`;
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true });
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const page = await context.newPage();
 let created = false;
 let adminClient;
 let initialImageCount = 0;
+let publicPage;
 
 const setArticleBody = () => page.locator('[data-body-editor]').evaluate(element => {
   element.innerHTML = '<h2>Verified heading</h2><p>This paragraph verifies article publishing.</p><ul><li>Verified list item</li></ul><p><a href="https://example.com">Verified link</a></p>';
@@ -83,10 +85,14 @@ try {
   let publicList = await (await page.request.get(`${base}/api/articles`)).json();
   assert.equal(publicList.articles.some(article => article.slug === slug), false, 'draft must not be public');
   assert.equal((await page.request.get(`${base}/insights/${slug}`)).status(), 404, 'draft direct URL');
+  publicPage = await context.newPage();
+  await publicPage.goto(`${base}/insights`, { waitUntil: 'networkidle' });
+  assert.equal(await publicPage.locator(`a[href="/insights/${slug}"]`).count(), 0, 'draft card must not be rendered');
 
   await page.locator('[data-publish]').click();
   await page.waitForFunction(() => document.querySelector('[data-save-message]')?.textContent === 'Article published successfully.');
   assert.equal(await page.locator('[name="slug"]').isEditable(), false, 'published slug is locked');
+  await publicPage.locator(`a[href="/insights/${slug}"]`).first().waitFor({ state: 'visible', timeout: 10000 });
   publicList = await (await page.request.get(`${base}/api/articles`)).json();
   assert.equal(publicList.articles.some(article => article.slug === slug), true, 'published article listing');
   const articleResponse = await page.request.get(`${base}/insights/${slug}`);
@@ -115,6 +121,7 @@ try {
   await page.locator('[data-article-list] button', { hasText: 'Production readiness check' }).first().click();
   await page.locator('[data-save-draft]').click();
   await page.waitForFunction(() => document.querySelector('[data-save-message]')?.textContent === 'Draft saved.');
+  await publicPage.locator(`a[href="/insights/${slug}"]`).first().waitFor({ state: 'detached', timeout: 20000 });
   assert.equal((await page.request.get(`${base}/insights/${slug}`)).status(), 404, 'unpublished direct URL');
   publicList = await (await page.request.get(`${base}/api/articles`)).json();
   assert.equal(publicList.articles.some(article => article.slug === slug), false, 'unpublished listing');
@@ -141,7 +148,7 @@ try {
   assert.equal(finalImages?.length || 0, initialImageCount, 'test images and failed duplicate uploads are cleaned up');
   await page.locator('[data-sign-out]').click();
   await page.waitForSelector('[data-login-view]:not([hidden])');
-  console.log(JSON.stringify({ ok: true, slug, checks: 30 }));
+  console.log(JSON.stringify({ ok: true, slug, checks: 33 }));
 } finally {
   if (created) await removeArticle(slug);
   await browser.close();

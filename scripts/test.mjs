@@ -50,5 +50,5 @@ verify('https://example.co.ke');
 let bad = spawnSync(process.execPath, ['scripts/build.mjs'], { encoding:'utf8', env:{...process.env,SITE_URL:'http://insecure.example.org'} });
 must(bad.status !== 0, 'Insecure URL was accepted');
 build();
-verify('https://achola-odhiambo-advocates.vercel.app');
+verify('https://achola-odhiambo-advocates.pages.dev');
 console.log('Production tests passed: SEO domain replacement, CSP integrity, assets, secure URL validation and demo fallback.');

@@ -1,6 +1,6 @@
 # Achola Odhiambo & Company Advocates — Website
 
-Production website for Achola Odhiambo & Company Advocates, maintained by Wakiliwa Tech. Public pages are statically built, while the Insights article manager uses Vercel Functions and Supabase Auth, Postgres and Storage.
+Production website for Achola Odhiambo & Company Advocates, maintained by Wakiliwa Tech. Cloudflare Pages serves the statically built public pages, Cloudflare Pages Functions serve dynamic article pages and APIs, and Supabase provides Auth, Postgres, Realtime and Storage.
 
 ## Verify the project
 
@@ -11,25 +11,24 @@ npm test       # checks source, builds for sample domain, validates SEO/CSP, res
 npm run build  # creates dist/
 ```
 
-The advocate publishes through `/admin`; no GitHub knowledge is required. Drafts stay private, published articles appear on `/insights`, and every article has a stable shareable URL with server-rendered social metadata. Required Vercel variables are `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`.
+The advocate publishes through `/admin`; no GitHub knowledge is required. Drafts stay private, published articles appear automatically on `/insights`, and every article has a stable shareable URL with server-rendered social metadata. Required Cloudflare production variables are `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SITE_URL`.
 
 Edit **`site/`** for page content, photos and styles. `dist/` is generated deployment output; do not hand-edit `dist/` or the generated `dist/_headers` file.
 
-## Cloudflare Pages — static-site fallback only
+## Cloudflare Pages production deployment
 
-The complete article dashboard is deployed on Vercel. A plain Cloudflare Pages deployment can serve the static marketing pages, but it will not provide the Vercel article API routes without an equivalent Functions migration.
+The full site is deployed to `https://achola-odhiambo-advocates.pages.dev`. The `functions/` directory contains the Cloudflare equivalents of the article listing, configuration, dynamic article-page and sitemap routes. The previous Vercel implementation remains in `api/` only as a temporary rollback path.
 
-1. Import `makebelief/achola-odhiambo-advocates` into **Cloudflare → Workers & Pages → Pages → Import repository**. Use a separate preview/security branch until approved; keep the Vercel site live meanwhile.
-2. Set **Framework preset: None**, **Production branch: `main`**, **Build command: `npm run build`**, **Build output directory: `dist`**, **Root directory: leave blank (repository root)**, **Node.js: 22 or later**.
-3. Once the purchased domain has been decided, set **`SITE_URL` = `https://YOUR-ACTUAL-DOMAIN`** in **Settings → Environment variables**, in the **production** (and ideally preview) build environment. Only an HTTPS origin is allowed, without a path or trailing query. Example: `https://example.co.ke`.
-4. Deploy after setting `SITE_URL`. In **Custom domains**, attach the real domain and its DNS, enforce HTTPS, choose either `www` or apex as canonical, and **301-redirect the other host** to the chosen canonical host at the Cloudflare zone. Set `SITE_URL` to exactly that canonical host.
-5. Check live `/`, `/about`, `/practice-areas`, `/managing-partner`, `/insights`, `/contact`, `/privacy`, `/terms`, `/legal-notice`, `/robots.txt`, `/sitemap.xml` and a nonexistent route (custom 404). Check canonical, Open Graph and CSP response headers on the real domain and test the WhatsApp flow on mobile and desktop.
-6. When Cloudflare has been verified, redirect the old Vercel deployment/demo URL to the canonical domain, or disable the old deployment after confirming the new site works, to reduce duplicate indexing.
-7. Submit `https://YOUR-ACTUAL-DOMAIN/sitemap.xml` to Google Search Console and request indexing; optionally set up a Bing Webmaster Tools profile. This is a post-domain SEO step; no sitemap submissions have been performed here.
+1. Authenticate Wrangler with the intended Cloudflare account and install dependencies with `npm install`.
+2. Configure the Pages project's production secrets `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SITE_URL`. `SITE_URL` must be the exact HTTPS canonical origin, with no path, query or fragment.
+3. Run `npm run deploy:cloudflare`. This builds `dist/`, compiles Pages Functions and deploys the `main` production branch.
+4. Run `TEST_BASE_URL=https://achola-odhiambo-advocates.pages.dev TEST_ADMIN_EMAIL=... TEST_ADMIN_PASSWORD=... npm run test:production`, then `npm run test:mobile` with the same environment to verify the complete live workflow.
+5. When a custom domain is ready, attach it under the Pages project, update the `SITE_URL` secret and build environment, deploy again, and redirect the non-canonical host to the chosen canonical host.
+6. Submit the canonical `/sitemap.xml` to Google Search Console and request indexing after the custom domain is approved.
 
 Cloudflare Pages automatically serves `about.html` at `/about`; the standard `404.html` is used for unknown routes. `site/_headers` is the Cloudflare Pages security-header template: the build emits `dist/_headers` with SHA-256 hashes for each inline JSON-LD metadata block, so executable inline scripts remain blocked by the Content Security Policy.
 
-**Search indexing protection:** Cloudflare preview branches, or a Cloudflare build without `SITE_URL`, receive `noindex` automatically. The final `main` build becomes indexable when the real `SITE_URL` is present. Do not bypass this gate by directly uploading the prebuilt `dist/` folder.
+Production builds default to the current `pages.dev` origin. Always set `SITE_URL` explicitly when moving to a custom domain so canonical, Open Graph, robots and sitemap URLs remain consistent.
 
 ## WhatsApp / social link preview
 
@@ -54,4 +53,4 @@ Every content page contains **server-rendered Open Graph (OG)** and Twitter/X me
 
 Ask the law firm to verify **business name spelling, telephone/WhatsApp destination, office address, practice areas, admissions/practising details, court-work references, photos, copyright permission, website terms and privacy notice**. Do a live end-to-end WhatsApp test. Regulatory/professional claims must be confirmed by the client; automated code checks cannot validate them. If the client later wants confidential enquiries, use an authenticated, rate-limited, encrypted server-side system instead of WhatsApp URL prefilling.
 
-No registrar/DNS changes, Cloudflare account deployment, real-domain performance audits, or Google Search Console ownership verification are performed by the source ZIP itself.
+The Cloudflare Pages deployment is active. Registrar/DNS changes, a custom domain, and Google Search Console ownership verification still require the final domain decision.

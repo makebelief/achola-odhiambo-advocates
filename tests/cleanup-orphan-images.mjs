@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const base = (process.env.TEST_BASE_URL || 'https://achola-odhiambo-advocates.vercel.app').replace(/\/$/, '');
+const base = (process.env.TEST_BASE_URL || 'https://achola-odhiambo-advocates.pages.dev').replace(/\/$/, '');
 const email = process.env.TEST_ADMIN_EMAIL;
 const password = process.env.TEST_ADMIN_PASSWORD;
 if (!email || !password) throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required.');

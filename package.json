@@ -5,6 +5,7 @@
   "scripts": {
     "check": "node scripts/build.mjs && node scripts/check.mjs && node --check api/article.mjs && node --check api/articles.mjs && node --check api/config.mjs && node --check api/sitemap.mjs",
     "build": "node scripts/build.mjs",
+    "deploy:cloudflare": "npm run build && wrangler pages deploy dist --project-name achola-odhiambo-advocates --branch main",
     "test": "node scripts/test.mjs",
     "test:production": "node tests/production-e2e.mjs",
     "cleanup:article-images": "node tests/cleanup-orphan-images.mjs",
@@ -17,6 +18,7 @@
   "devDependencies": {
     "axe-core": "4.14.0",
     "esbuild": "0.28.2",
-    "playwright-core": "1.56.1"
+    "playwright-core": "1.56.1",
+    "wrangler": "4.151.3"
   }
 }
