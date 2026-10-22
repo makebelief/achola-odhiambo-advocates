@@ -3,14 +3,19 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "check": "node scripts/build.mjs && node scripts/check.mjs && node --check api/article.mjs && node --check api/articles.mjs && node --check api/config.mjs",
-    "build": "node scripts/build.mjs"
+    "check": "node scripts/build.mjs && node scripts/check.mjs && node --check api/article.mjs && node --check api/articles.mjs && node --check api/config.mjs && node --check api/sitemap.mjs",
+    "build": "node scripts/build.mjs",
+    "test:production": "node tests/production-e2e.mjs",
+    "cleanup:article-images": "node tests/cleanup-orphan-images.mjs",
+    "test:mobile": "node tests/mobile-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
     "dompurify": "3.4.17"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "axe-core": "4.14.0",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.56.1"
   }
 }

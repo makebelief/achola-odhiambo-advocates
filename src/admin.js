@@ -19,6 +19,22 @@ const showMessage = (element, message, error = false) => { element.textContent =
 const slugify = value => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100);
 const today = () => new Date().toISOString().slice(0, 10);
 const setBusy = busy => articleForm?.querySelectorAll('button').forEach(button => { button.disabled = busy; });
+const storagePath = url => {
+  try {
+    const marker = '/storage/v1/object/public/article-images/';
+    const parsed = new URL(url);
+    const index = parsed.pathname.indexOf(marker);
+    if (index < 0) return null;
+    const path = decodeURIComponent(parsed.pathname.slice(index + marker.length));
+    return path.startsWith(`${session.user.id}/`) ? path : null;
+  } catch { return null; }
+};
+const removeCover = async url => {
+  const path = storagePath(url);
+  if (!path) return null;
+  const { error } = await supabase.storage.from('article-images').remove([path]);
+  return error;
+};
 
 async function initialise() {
   try {
@@ -71,7 +87,7 @@ function renderList(selectId) {
 
 function newArticle() {
   articleForm.reset(); articleForm.elements.id.value = ''; articleForm.elements.author_name.value = 'Achola Odhiambo'; articleForm.elements.published_date.value = today();
-  bodyEditor.innerHTML = ''; coverPreview.hidden = true; articleForm.hidden = false; emptyEditor.hidden = true;
+  bodyEditor.innerHTML = ''; coverPreview.hidden = true; articleForm.hidden = false; emptyEditor.hidden = true; articleForm.elements.slug.readOnly = false;
   document.querySelector('[data-editor-mode]').textContent = 'New article'; document.querySelector('[data-editor-title]').textContent = 'Untitled article'; document.querySelector('[data-delete]').hidden = true;
   renderList(); articleForm.elements.title.focus();
 }
@@ -82,6 +98,8 @@ function editArticle(id) {
   articleForm.elements.published_date.value = (article.published_at || article.created_at).slice(0, 10);
   bodyEditor.innerHTML = DOMPurify.sanitize(article.body_html || '');
   coverPreview.src = article.cover_image_url; coverPreview.hidden = !article.cover_image_url;
+  articleForm.elements.image_alt.value = article.image_alt || '';
+  articleForm.elements.slug.readOnly = article.status === 'published';
   articleForm.hidden = false; emptyEditor.hidden = true; document.querySelector('[data-editor-mode]').textContent = article.status === 'published' ? 'Published article' : 'Draft article'; document.querySelector('[data-editor-title]').textContent = article.title; document.querySelector('[data-delete]').hidden = false;
   renderList(id);
 }
@@ -97,7 +115,7 @@ document.querySelector('[data-link]').addEventListener('click', () => { const ur
 
 async function uploadCover() {
   const file = articleForm.elements.cover_image.files[0];
-  if (!file) return articleForm.elements.cover_image_url.value;
+  if (!file) return { url: articleForm.elements.cover_image_url.value, uploaded: false };
   if (file.size > 5 * 1024 * 1024) throw new Error('The cover image must be smaller than 5 MB.');
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Please choose a JPG, PNG or WebP image.');
   const extension = file.name.split('.').pop().toLowerCase();
@@ -107,7 +125,7 @@ async function uploadCover() {
   const publicUrl = supabase.storage.from('article-images').getPublicUrl(path).data.publicUrl;
   articleForm.elements.cover_image_url.value = publicUrl;
   articleForm.elements.cover_image.value = '';
-  return publicUrl;
+  return { url: publicUrl, uploaded: true };
 }
 
 async function saveArticle(status) {
@@ -115,14 +133,23 @@ async function saveArticle(status) {
   const bodyHtml = DOMPurify.sanitize(bodyEditor.innerHTML, { ALLOWED_TAGS: ['p','br','h2','h3','strong','em','ul','ol','li','a','blockquote'], ALLOWED_ATTR: ['href','target','rel'] });
   if (bodyEditor.textContent.trim().length < 3) return showMessage(saveMessage, 'Please write some article content before saving.', true);
   setBusy(true); showMessage(saveMessage, status === 'published' ? 'Publishing…' : 'Saving draft…');
+  let newCover;
+  const previousCover = articleForm.elements.cover_image_url.value;
   try {
-    const coverImageUrl = await uploadCover(); if (!coverImageUrl) throw new Error('Please upload a cover image.');
+    newCover = await uploadCover(); if (!newCover.url) throw new Error('Please upload a cover image.');
     const id = articleForm.elements.id.value;
-    const article = { title: articleForm.elements.title.value.trim(), slug: articleForm.elements.slug.value.trim(), description: articleForm.elements.description.value.trim(), category: articleForm.elements.category.value.trim(), author_name: articleForm.elements.author_name.value.trim(), cover_image_url: coverImageUrl, body_html: bodyHtml, status, published_at: status === 'published' ? `${articleForm.elements.published_date.value}T09:00:00+03:00` : null, created_by: session.user.id };
+    const article = { title: articleForm.elements.title.value.trim(), slug: articleForm.elements.slug.value.trim(), description: articleForm.elements.description.value.trim(), category: articleForm.elements.category.value.trim(), author_name: articleForm.elements.author_name.value.trim(), cover_image_url: newCover.url, image_alt: articleForm.elements.image_alt.value.trim(), body_html: bodyHtml, status, published_at: status === 'published' ? `${articleForm.elements.published_date.value}T09:00:00+03:00` : null, created_by: session.user.id };
     const query = id ? supabase.from('articles').update(article).eq('id', id) : supabase.from('articles').insert(article);
     const { data, error } = await query.select().single(); if (error) throw error;
-    articleForm.elements.id.value = data.id; showMessage(saveMessage, status === 'published' ? 'Article published successfully.' : 'Draft saved.'); await loadArticles(data.id); editArticle(data.id);
+    if (newCover.uploaded && previousCover && previousCover !== newCover.url) await removeCover(previousCover);
+    articleForm.elements.id.value = data.id; await loadArticles(data.id); editArticle(data.id); showMessage(saveMessage, status === 'published' ? 'Article published successfully.' : 'Draft saved.');
   } catch (error) {
+    if (newCover?.uploaded) {
+      await removeCover(newCover.url);
+      articleForm.elements.cover_image_url.value = previousCover;
+      coverPreview.src = previousCover;
+      coverPreview.hidden = !previousCover;
+    }
     const message = error.code === '23505' ? 'That article address is already in use. Choose a different one.' : error.code === '23514' ? 'Please check that every field contains enough information.' : error.message;
     showMessage(saveMessage, message, true);
   }
@@ -134,7 +161,26 @@ document.querySelector('[data-save-draft]').addEventListener('click', () => save
 document.querySelector('[data-publish]').addEventListener('click', () => saveArticle('published'));
 document.querySelector('[data-view-site]').addEventListener('click', () => window.open('/insights', '_blank', 'noopener'));
 document.querySelector('[data-sign-out]').addEventListener('click', async () => { await supabase.auth.signOut(); location.reload(); });
-document.querySelector('[data-delete]').addEventListener('click', async () => { const id = articleForm.elements.id.value; if (!id || !confirm('Delete this article permanently?')) return; setBusy(true); const { error } = await supabase.from('articles').delete().eq('id', id); setBusy(false); if (error) return showMessage(saveMessage, error.message, true); articleForm.hidden = true; emptyEditor.hidden = false; await loadArticles(); });
+document.querySelector('[data-change-password]').addEventListener('click', async () => {
+  const password = prompt('Enter a new password (at least 12 characters):');
+  if (!password) return;
+  if (password.length < 12) return alert('Please use at least 12 characters.');
+  const confirmation = prompt('Enter the new password again:');
+  if (password !== confirmation) return alert('The passwords do not match.');
+  const { error } = await supabase.auth.updateUser({ password });
+  alert(error ? `Password was not changed: ${error.message}` : 'Password changed successfully.');
+});
+document.querySelector('[data-delete]').addEventListener('click', async () => {
+  const id = articleForm.elements.id.value;
+  if (!id || !confirm('Delete this article permanently?')) return;
+  const cover = articleForm.elements.cover_image_url.value;
+  setBusy(true);
+  const { error } = await supabase.from('articles').delete().eq('id', id);
+  if (error) { setBusy(false); return showMessage(saveMessage, error.message, true); }
+  const imageError = await removeCover(cover);
+  setBusy(false); articleForm.hidden = true; emptyEditor.hidden = false; await loadArticles();
+  if (imageError) alert('The article was deleted, but its old cover image could not be removed automatically.');
+});
 articleForm.elements.cover_image.addEventListener('change', event => { const file = event.target.files[0]; if (file) { coverPreview.src = URL.createObjectURL(file); coverPreview.hidden = false; } });
 
 initialise();

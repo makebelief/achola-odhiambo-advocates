@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dist = path.resolve('dist');
-const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', 'admin/index.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'sitemap.xml', 'site.webmanifest', 'assets/css/site.css', 'assets/css/admin.css', 'assets/js/site.js', 'assets/js/admin.js', 'assets/js/insights.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
+const required = ['index.html', 'about.html', 'practice-areas.html', 'managing-partner.html', 'insights.html', 'contact.html', 'privacy.html', 'terms.html', 'legal-notice.html', 'admin/index.html', '404.html', '500.html', '503.html', '504.html', 'robots.txt', 'site.webmanifest', 'assets/css/site.css', 'assets/css/admin.css', 'assets/js/site.js', 'assets/js/admin.js', 'assets/js/insights.js', 'assets/media/logo-dark.svg', 'assets/media/logo-light.svg'];
 const errors = [];
 
 for (const file of required) if (!fs.existsSync(path.join(dist, file))) errors.push(`Missing generated file: ${file}`);
@@ -25,7 +25,8 @@ for (const file of html) {
     const url = match[1].split(/[?#]/)[0];
     if (url === '/' || url.startsWith('//')) continue;
     if (/^\/insights\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(url)) continue;
-    if (url.startsWith('/assets/') || url.startsWith('/images/') || ['/site.webmanifest', '/robots.txt', '/sitemap.xml'].includes(url)) {
+    if (url === '/sitemap.xml') continue;
+    if (url.startsWith('/assets/') || url.startsWith('/images/') || ['/site.webmanifest', '/robots.txt'].includes(url)) {
       if (!fs.existsSync(path.join(dist, url.slice(1)))) errors.push(`${label} missing asset ${url}`);
     } else {
       const htmlFile = path.join(dist, `${url.slice(1)}.html`);
@@ -36,12 +37,10 @@ for (const file of html) {
 }
 
 const articleFiles = fs.readdirSync(path.resolve('content/articles')).filter(file => file.endsWith('.md'));
-const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
 const insights = fs.readFileSync(path.join(dist, 'insights.html'), 'utf8');
 for (const articleFile of articleFiles) {
   const slug = path.basename(articleFile, '.md');
   if (!insights.includes(`href="/insights/${slug}"`)) errors.push(`${slug} missing from Insights listing`);
-  if (!sitemap.includes(`/insights/${slug}`)) errors.push(`${slug} missing from sitemap`);
 }
 
 const admin = fs.readFileSync(path.join(dist, 'admin/index.html'), 'utf8');
