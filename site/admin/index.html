@@ -4,20 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
-  <title>Article Manager | Achola Odhiambo &amp; Company Advocates</title>
+  <title>Website Manager | Achola Odhiambo &amp; Company Advocates</title>
   <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
   <link rel="stylesheet" href="/assets/css/admin.css?v=2">
+  <link rel="stylesheet" href="/assets/css/content-editor.css?v=1">
 </head>
 <body>
-  <header class="admin-header"><a href="/" aria-label="Website home"><img src="/assets/media/logo-dark.svg" alt="Achola Odhiambo & Company Advocates"></a><span>Article Manager</span></header>
+  <header class="admin-header"><a href="/" aria-label="Website home"><img src="/assets/media/logo-dark.svg" alt="Achola Odhiambo & Company Advocates"></a><span>Website Manager</span></header>
   <main>
     <section class="login-card" data-login-view>
-      <p class="kicker">Secure publishing</p><h1>Welcome back</h1><p>Sign in to write and manage website articles.</p>
+      <p class="kicker">Secure website management</p><h1>Welcome back</h1><p>Sign in to manage approved website content and articles.</p>
       <form data-login-form><label>Email address<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">Sign in</button><p class="form-message" data-login-message role="status"></p></form>
     </section>
     <section class="dashboard" data-dashboard hidden>
-      <div class="dashboard-top"><div><p class="kicker">Insights</p><h1>Articles</h1></div><div class="dashboard-actions"><button type="button" class="secondary" data-view-site>View website</button><button type="button" class="secondary" data-change-password>Change password</button><button type="button" class="secondary" data-sign-out>Sign out</button><button type="button" data-new-article>New article</button></div></div>
-      <div class="dashboard-grid">
+      <div class="dashboard-top"><div><p class="kicker">Controlled editing</p><h1 data-dashboard-title>Articles</h1></div><div class="dashboard-actions"><button type="button" class="secondary" data-view-site>View website</button><button type="button" class="secondary" data-change-password>Change password</button><button type="button" class="secondary" data-sign-out>Sign out</button><button type="button" data-new-article>New article</button></div></div>
+      <nav class="manager-tabs" aria-label="Website manager sections"><button type="button" class="active" data-manager-tab="articles" aria-pressed="true">Articles</button><button type="button" data-manager-tab="content" aria-pressed="false">Website content</button></nav>
+      <div class="dashboard-grid" data-articles-view>
         <aside class="article-sidebar"><div class="sidebar-heading"><h2>Your articles</h2><span data-article-count></span></div><div class="article-list" data-article-list><p>Loading articles…</p></div></aside>
         <section class="editor-panel" data-editor-panel>
           <div class="empty-editor" data-empty-editor><span>✦</span><h2>Select an article or create a new one</h2><p>Drafts remain private until you choose Publish.</p></div>
@@ -37,6 +39,25 @@
           </form>
         </section>
       </div>
+      <section class="content-manager" data-content-view hidden>
+        <div class="content-intro"><div><p class="kicker">Approved fields only</p><h2>Website content</h2><p>Edit page introductions, contact information and the existing eight practice areas. Layout, menus, styling and legal pages cannot be changed here.</p></div><a class="secondary button-link" href="/" target="_blank" rel="noopener">Preview website</a></div>
+        <form data-content-form>
+          <fieldset><legend>Page introductions</legend><p class="field-help">The highlighted phrase appears in gold. All fields accept plain text only.</p>
+            <div class="page-content-grid">
+              <section><h3>Home</h3><label>Main heading<input name="home_heading" maxlength="100" required></label><label>Highlighted phrase<input name="home_highlight" maxlength="100" required></label><label>Description<textarea name="home_description" rows="4" maxlength="320" required></textarea></label></section>
+              <section><h3>About</h3><label>Main heading<input name="about_heading" maxlength="100" required></label><label>Highlighted phrase<input name="about_highlight" maxlength="100" required></label><label>Description<textarea name="about_description" rows="4" maxlength="320" required></textarea></label></section>
+              <section><h3>Practice areas</h3><label>Main heading<input name="practice_heading" maxlength="100" required></label><label>Highlighted phrase<input name="practice_highlight" maxlength="100" required></label><label>Description<textarea name="practice_description" rows="4" maxlength="320" required></textarea></label></section>
+              <section><h3>Managing partner</h3><label>Main heading<input name="partner_heading" maxlength="100" required></label><label>Highlighted phrase<input name="partner_highlight" maxlength="100" required></label><label>Description<textarea name="partner_description" rows="4" maxlength="320" required></textarea></label></section>
+              <section><h3>Insights</h3><label>Main heading<input name="insights_heading" maxlength="100" required></label><label>Highlighted phrase<input name="insights_highlight" maxlength="100" required></label><label>Description<textarea name="insights_description" rows="4" maxlength="320" required></textarea></label></section>
+              <section><h3>Contact</h3><label>Main heading<input name="contact_heading" maxlength="100" required></label><label>Highlighted phrase<input name="contact_highlight" maxlength="100" required></label><label>Description<textarea name="contact_description" rows="4" maxlength="320" required></textarea></label></section>
+            </div>
+          </fieldset>
+          <fieldset><legend>Contact details</legend><div class="field-grid"><label>Phone shown to visitors<input name="phone_display" maxlength="32" required></label><label>Phone link (international format)<input name="phone_e164" type="tel" pattern="\+[1-9][0-9]{7,14}" placeholder="+254…" required><small>Start with + and the country code; do not use spaces.</small></label><label>WhatsApp number<input name="whatsapp_number" inputmode="numeric" pattern="[1-9][0-9]{7,14}" required><small>Country code and number only; no + or spaces.</small></label><span></span><label>Office address — line 1<input name="office_line_1" maxlength="100" required></label><label>Office address — line 2<input name="office_line_2" maxlength="100" required></label></div></fieldset>
+          <fieldset><legend>Practice areas</legend><p class="field-help">The eight approved sections remain fixed. You may change only their names and descriptions.</p><div class="practice-editor" data-practice-editor></div></fieldset>
+          <p class="form-message" data-content-message role="status" aria-live="polite"></p>
+          <div class="save-actions"><button type="submit" data-save-content>Save website content</button></div>
+        </form>
+      </section>
     </section>
   </main>
   <script type="module" src="/assets/js/admin.js?v=2"></script>

@@ -88,7 +88,7 @@ if (form) {
       `Brief summary: ${clean('message', 1000) || 'Please contact me to discuss the matter.'}`
     ];
     const link = document.createElement('a');
-    link.href = 'https://wa.me/254112572628?text=' + encodeURIComponent(lines.join('\n'));
+    link.href = `https://wa.me/${form.dataset.whatsappNumber || '254112572628'}?text=` + encodeURIComponent(lines.join('\n'));
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.click();
@@ -109,3 +109,9 @@ document.querySelectorAll('[data-copy-link]').forEach(button => button.addEventL
     if (status) status.textContent = 'Copy the address from your browser to share this article.';
   }
 }));
+
+if (!document.querySelector('script[src^="/assets/js/site-content.js"]')) {
+  const contentScript = document.createElement('script');
+  contentScript.src = '/assets/js/site-content.js?v=1';
+  document.head.append(contentScript);
+}

@@ -21,6 +21,8 @@ try {
   await page.locator('[name="password"]').fill(password);
   await page.locator('[data-login-form] button').click();
   await page.waitForSelector('[data-dashboard]:not([hidden])');
+  await page.locator('[data-manager-tab="content"]').click();
+  await page.waitForFunction(() => document.querySelectorAll('.practice-edit-card').length === 8);
   await page.screenshot({ path: '/tmp/achola-admin-mobile.png', fullPage: true });
   await page.addScriptTag({ path: axePath });
   let audit = await page.evaluate(() => axe.run());

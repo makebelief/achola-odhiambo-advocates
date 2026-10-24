@@ -11,9 +11,15 @@ const articleList = document.querySelector('[data-article-list]');
 const bodyEditor = document.querySelector('[data-body-editor]');
 const saveMessage = document.querySelector('[data-save-message]');
 const coverPreview = document.querySelector('[data-cover-preview]');
+const contentForm = document.querySelector('[data-content-form]');
+const contentMessage = document.querySelector('[data-content-message]');
+const practiceEditor = document.querySelector('[data-practice-editor]');
+const articlesView = document.querySelector('[data-articles-view]');
+const contentView = document.querySelector('[data-content-view]');
 let supabase;
 let session;
 let articles = [];
+let siteContentLoaded = false;
 
 const showMessage = (element, message, error = false) => { element.textContent = message; element.classList.toggle('error', error); };
 const slugify = value => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100);
@@ -62,6 +68,75 @@ async function openDashboard(nextSession) {
   if (error || !access) { await supabase.auth.signOut(); return showMessage(loginMessage, 'This account does not have publishing access.', true); }
   loginView.hidden = true; dashboard.hidden = false; await loadArticles();
 }
+
+function switchManager(section) {
+  const showContent = section === 'content';
+  articlesView.hidden = showContent;
+  contentView.hidden = !showContent;
+  document.querySelector('[data-dashboard-title]').textContent = showContent ? 'Website content' : 'Articles';
+  document.querySelector('[data-new-article]').hidden = showContent;
+  document.querySelectorAll('[data-manager-tab]').forEach(button => {
+    const active = button.dataset.managerTab === section;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  if (showContent && !siteContentLoaded) loadSiteContent();
+}
+
+async function loadSiteContent() {
+  showMessage(contentMessage, 'Loading website content…');
+  const [{ data: content, error: contentError }, { data: areas, error: areasError }] = await Promise.all([
+    supabase.from('site_content').select('*').eq('id', 1).single(),
+    supabase.from('site_practice_areas').select('position,title,description').order('position')
+  ]);
+  if (contentError || areasError || !content || areas?.length !== 8) {
+    return showMessage(contentMessage, 'Website content could not be loaded. Please try again.', true);
+  }
+  for (const [name, value] of Object.entries(content)) {
+    if (contentForm.elements[name]) contentForm.elements[name].value = value || '';
+  }
+  practiceEditor.replaceChildren();
+  for (const area of areas) {
+    const section = document.createElement('section');
+    section.className = 'practice-edit-card';
+    const heading = document.createElement('h3');
+    heading.textContent = `${String(area.position).padStart(2, '0')} — Practice area`;
+    const titleLabel = document.createElement('label');
+    titleLabel.textContent = 'Name';
+    const title = document.createElement('input');
+    title.name = `area_${area.position}_title`; title.maxLength = 100; title.required = true; title.value = area.title;
+    titleLabel.append(title);
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.textContent = 'Description';
+    const description = document.createElement('textarea');
+    description.name = `area_${area.position}_description`; description.maxLength = 320; description.rows = 4; description.required = true; description.value = area.description;
+    descriptionLabel.append(description);
+    section.append(heading, titleLabel, descriptionLabel);
+    practiceEditor.append(section);
+  }
+  siteContentLoaded = true;
+  showMessage(contentMessage, '');
+}
+
+contentForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!contentForm.reportValidity()) return;
+  const submit = contentForm.querySelector('[data-save-content]');
+  const fields = new FormData(contentForm);
+  const contentKeys = ['home_heading','home_highlight','home_description','about_heading','about_highlight','about_description','practice_heading','practice_highlight','practice_description','partner_heading','partner_highlight','partner_description','insights_heading','insights_highlight','insights_description','contact_heading','contact_highlight','contact_description','phone_display','phone_e164','whatsapp_number','office_line_1','office_line_2'];
+  const content = Object.fromEntries(contentKeys.map(key => [key, String(fields.get(key) || '').trim()]));
+  const areas = Array.from({ length: 8 }, (_, index) => ({
+    position: index + 1,
+    title: String(fields.get(`area_${index + 1}_title`) || '').trim(),
+    description: String(fields.get(`area_${index + 1}_description`) || '').trim()
+  }));
+  submit.disabled = true;
+  showMessage(contentMessage, 'Saving website content…');
+  const { error } = await supabase.rpc('update_controlled_site_content', { p_content: content, p_areas: areas });
+  submit.disabled = false;
+  if (error) return showMessage(contentMessage, error.code === '23514' ? 'Please check the length and format of every field.' : 'Website content could not be saved. Please try again.', true);
+  showMessage(contentMessage, 'Saved. The updated content is now live on the website.');
+});
 
 async function loadArticles(selectId) {
   articleList.innerHTML = '<p>Loading articles…</p>';
@@ -157,6 +232,7 @@ async function saveArticle(status) {
 }
 
 document.querySelector('[data-new-article]').addEventListener('click', newArticle);
+document.querySelectorAll('[data-manager-tab]').forEach(button => button.addEventListener('click', () => switchManager(button.dataset.managerTab)));
 document.querySelector('[data-save-draft]').addEventListener('click', () => saveArticle('draft'));
 document.querySelector('[data-publish]').addEventListener('click', () => saveArticle('published'));
 document.querySelector('[data-view-site]').addEventListener('click', () => window.open('/insights', '_blank', 'noopener'));

@@ -72,6 +72,23 @@ try {
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForSelector('[data-dashboard]:not([hidden])');
 
+  await page.locator('[data-manager-tab="content"]').click();
+  await page.waitForSelector('[data-content-view]:not([hidden])');
+  await page.waitForFunction(() => document.querySelectorAll('.practice-edit-card').length === 8);
+  assert.equal(await page.locator('.practice-edit-card').count(), 8, 'fixed practice-area editor count');
+  assert.equal(await page.locator('[data-content-form] input[type="file"], [data-content-form] [contenteditable]').count(), 0, 'controlled content editor has no unrestricted input');
+  const homeHeading = await page.locator('[name="home_heading"]').inputValue();
+  assert.equal(homeHeading, 'The Bar of Excellence.', 'current website content loads into editor');
+  await page.locator('[data-save-content]').click();
+  await page.waitForFunction(() => document.querySelector('[data-content-message]')?.textContent.includes('now live'));
+  const contentApi = await (await page.request.get(`${base}/api/site-content`)).json();
+  assert.equal(contentApi.content.home_heading, homeHeading, 'saved content is immediately public');
+  assert.equal(contentApi.practiceAreas.length, 8, 'all practice areas are public');
+  await page.goto(`${base}/`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('.home-hero h1').innerText(), 'The Bar of Excellence. Efficient. Thorough. Reliable.', 'public home heading renders managed content');
+  await page.goto(`${base}/admin`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-dashboard]:not([hidden])');
+
   await page.locator('[data-new-article]').click();
   await fillArticle(slug);
   await page.locator('[data-body-editor]').evaluate(element => { element.innerHTML = ''; });
@@ -154,7 +171,7 @@ try {
   assert.equal(finalImages?.length || 0, initialImageCount, 'test images and failed duplicate uploads are cleaned up');
   await page.locator('[data-sign-out]').click();
   await page.waitForSelector('[data-login-view]:not([hidden])');
-  console.log(JSON.stringify({ ok: true, slug, checks: 34 }));
+  console.log(JSON.stringify({ ok: true, slug, checks: 40 }));
 } finally {
   if (created) await removeArticle(slug);
   await browser.close();

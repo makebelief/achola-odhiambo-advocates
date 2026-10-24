@@ -139,12 +139,18 @@ fs.rmSync(sitemapPath);
 
 await Promise.all([
   bundle({ entryPoints: ['src/admin.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/admin.js') }),
-  bundle({ entryPoints: ['src/insights.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/insights.js') })
+  bundle({ entryPoints: ['src/insights.js'], bundle: true, minify: true, format: 'esm', target: 'es2020', outfile: path.join(out, 'assets/js/insights.js') }),
+  bundle({ entryPoints: ['src/site-content.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', outfile: path.join(out, 'assets/js/site-content.js') })
 ]);
-for (const bundleFile of ['admin.js', 'insights.js']) {
+for (const bundleFile of ['admin.js', 'insights.js', 'site-content.js']) {
   const filename = path.join(out, 'assets/js', bundleFile);
   const source = fs.readFileSync(filename, 'utf8').replace(/[ \t]+$/gm, '').trimEnd();
   fs.writeFileSync(filename, `${source}\n`);
+}
+
+for (const filename of fs.readdirSync(out).filter(name => name.endsWith('.html')).map(name => path.join(out, name))) {
+  const page = fs.readFileSync(filename, 'utf8');
+  fs.writeFileSync(filename, page.replace('</body>', '<script src="/assets/js/site-content.js?v=1" defer></script></body>'));
 }
 
 const builtPages = fs.readdirSync(out).filter(name => name.endsWith('.html')).map(name => path.join(out, name));
